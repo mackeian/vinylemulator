@@ -9,7 +9,6 @@ import sys
 # this function gets called when a NFC tag is detected
 def touched(tag):
     global sonosroom_local
-
     if tag.ndef:
         for record in tag.ndef.records:
             try:
