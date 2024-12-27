@@ -10,13 +10,13 @@ import sys
 def touched(tag):
     global sonosroom_local
     if tag.ndef:
+        print(" === NFC TAG TOUCHED ===")
         for record in tag.ndef.records:
             try:
                 receivedtext = record.text
             except:
                 print("Error reading a *TEXT* tag from NFC.")
                 return True
-            
             receivedtext_lower = receivedtext.lower()
 
             print("")
@@ -118,7 +118,6 @@ def touched(tag):
                 'urltoget': urltoget
                 }
                 r = requests.post(appsettings.usagestatsurl, data = logdata)
-
     else:
         print("")
         print ("NFC reader could not read tag. This can be because the reader didn't get a clear read of the card. If the issue persists then this is usually because (a) the tag is encoded (b) you are trying to use a mifare classic card, which is not supported or (c) you have tried to add data to the card which is not in text format. Please check the data on the card using NFC Tools on Windows or Mac.")
@@ -127,31 +126,26 @@ def touched(tag):
 
     return True
 
-print("")
-print("")
+print(" === STARTING READNFC ===")
 print("Loading and checking readnfc")
 print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-print("")
-print("SCRIPT")
 print ("You are running version " + appsettings.appversion + "...")
-
-print("")
-print("NFC READER")
-print("Connecting to NFC reader...")
+print("1. NFC READER")
+print("a) Connecting to NFC reader...")
 try:
     reader = nfc.ContactlessFrontend(usersettings.nfc_reader_path)
 except IOError as e:
     print ("... could not connect to reader")
     print ("")
     print ("You should check that the reader is working by running the following command at the command line:")
-    print (">  python -m nfcpy")
+    print (">  python -m nfc")
     print ("")
     print ("If this reports that the reader is in use by readnfc or otherwise crashes out then make sure that you don't already have readnfc running in the background via pm2. You can do this by running:")
-    print (">  pm2 status             (this will show you whether it is running)")
-    print (">  pm2 stop readnfc       (this will allow you to stop it so you can run the script manually)")
+    print (">  pm2 status               (this will show you whether it is running)")
+    print (">  pm2 stop nfc-reader       (this will allow you to stop it so you can run the script manually)")
     print ("")
     print ("If you want to remove readnfc from running at startup then you can do it with:")
-    print (">  pm2 delete readnfc")
+    print (">  pm2 delete nfc-reader")
     print (">  pm2 save")
     print (">  sudo reboot")
     print ("")
@@ -160,22 +154,32 @@ except IOError as e:
 print("... and connected to " + str(reader))
 
 print ("")
-print ("SONOS API")
+print ("2. SONOS API")
 sonosroom_local = usersettings.sonosroom
 print ("API address set to " + usersettings.sonoshttpaddress)
 print ("Sonos room set to " + sonosroom_local)
 
-print ("Trying to connect to API ...")
+print ("b) Trying to connect to API ...")
 try:
     r = requests.get(usersettings.sonoshttpaddress)
-except:
-    print ("... but API did not respond. This could be a temporary error so I won't quit, but carry on to see if it fixes itself")
+except Exception as e:
+    print ("... but API did not respond. This could be a temporary error however, so we'll resume anyway")
+    print("Error: " + str(e))
 
-if r.status_code == 200:
-    print ("... and API responding")
+if r:
+    if r.status_code == 200:
+        print("... and API responding correctly!")
+    else:
+        print("... but API not responding correctly. Status code: " + str(r.status_code))
+        print(r)
+
+else:
+    print("... but API not responding correctly. No response received")
+
 
 print("")
-print("OK, all ready! Present an NFC tag.")
+print(" === ALL READY ===")
+print("OK! ALL READY! You can now present a tag.")
 print("")
 
 if usersettings.sendanonymoususagestatistics == "yes":
