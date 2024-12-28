@@ -101,7 +101,8 @@ def touched(tag):
             r = requests.get(urltoget)
 
             if r.status_code != 200:
-                print ("Error code returned from Sonos API")
+                print ("Error code returned from Sonos API:" + r.status_code)
+                print(r.text)
                 return True
             
             print ("Sonos API reports " + r.json()['status'])
